@@ -1,5 +1,5 @@
 # Front: archivos estáticos detrás de nginx. No hay nada que compilar, solo copiar.
-FROM nginx:1.27-alpine
+FROM nginx:1.29-alpine
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY public/ /usr/share/nginx/html/
