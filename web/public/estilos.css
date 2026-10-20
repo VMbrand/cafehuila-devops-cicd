@@ -1,0 +1,17 @@
+:root { --cafe: #5b3a29; --crema: #f7f1ea; --verde: #2e7d32; --rojo: #c62828; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, sans-serif; background: var(--crema); color: #2b2b2b; }
+header { background: var(--cafe); color: #fff; padding: 1.2rem 1rem; text-align: center; }
+header h1 { margin: 0; }
+header p { margin: .3rem 0 0; opacity: .85; }
+main { max-width: 960px; margin: 1.5rem auto; padding: 0 1rem; display: grid; gap: 1.2rem;
+       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.tarjeta { background: #fff; border-radius: 10px; padding: 1rem 1.2rem; box-shadow: 0 1px 4px #0002; }
+label { display: block; margin: .6rem 0; font-weight: 600; }
+input, select { display: block; width: 100%; padding: .45rem; margin-top: .25rem; font: inherit; }
+button { background: var(--cafe); color: #fff; border: 0; padding: .6rem 1rem; border-radius: 6px;
+         font: inherit; cursor: pointer; }
+table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+th, td { text-align: left; padding: .35rem; border-bottom: 1px solid #eee; }
+.ok { color: var(--verde); } .error { color: var(--rojo); }
+footer { text-align: center; padding: 1rem; color: #777; font-size: .85rem; }

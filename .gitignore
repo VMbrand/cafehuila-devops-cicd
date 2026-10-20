@@ -1,0 +1,5 @@
+node_modules/
+api/datos/
+*.db
+.env
+*.pem

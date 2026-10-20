@@ -1,0 +1,25 @@
+# Ambiente de DESARROLLO: construye las imágenes desde el código de esta carpeta.
+#   docker compose up --build        ->  http://localhost:8080
+#   docker compose down              ->  apaga (los pedidos quedan en el volumen)
+#   docker compose down -v           ->  apaga y BORRA los datos
+services:
+  api:
+    build:
+      context: ./api
+      target: prod
+    env_file: .env
+    volumes:
+      - datos:/data
+    restart: unless-stopped
+
+  web:
+    build: ./web
+    ports:
+      - "${PUERTO_WEB:-8080}:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  datos:

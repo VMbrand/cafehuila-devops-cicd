@@ -1,0 +1,15 @@
+{
+  "name": "cafehuila-api",
+  "version": "1.0.0",
+  "description": "API de pedidos de CaféHuila — caso de referencia del Corte 3 (DevOps)",
+  "main": "src/server.js",
+  "private": true,
+  "engines": {
+    "node": ">=22.5"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test"
+  },
+  "license": "UNLICENSED"
+}

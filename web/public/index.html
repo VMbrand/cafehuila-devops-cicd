@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CaféHuila · Pedidos</title>
+  <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+  <header>
+    <h1>☕ CaféHuila</h1>
+    <p>Pedidos del día · café y achiras del Huila</p>
+  </header>
+
+  <main>
+    <section class="tarjeta">
+      <h2>Nuevo pedido</h2>
+      <form id="form-pedido">
+        <label>Cliente <input name="cliente" maxlength="60" required></label>
+        <label>Producto <select name="producto_id" id="productos"></select></label>
+        <label>Cantidad <input name="cantidad" type="number" min="1" max="20" value="1" required></label>
+        <button type="submit">Registrar pedido</button>
+        <p id="mensaje" role="status"></p>
+      </form>
+    </section>
+
+    <section class="tarjeta">
+      <h2>Últimos pedidos</h2>
+      <table>
+        <thead><tr><th>#</th><th>Cliente</th><th>Producto</th><th>Cant.</th><th>Total</th></tr></thead>
+        <tbody id="pedidos"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <footer>
+    <span id="version">versión …</span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
