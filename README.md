@@ -31,3 +31,26 @@ El despliegue a EC2 queda protegido por la variable de repositorio `DEPLOY_ENABL
 | `compose.yml` | Desarrollo: construye desde el código local |
 | `compose.prod.yml` | Producción: descarga imágenes de GHCR por commit |
 | `infra/user-data.sh` | Prepara EC2 con Docker, Compose y swap |
+
+## Operación de producción
+
+Antes de habilitar el despliegue se crea en AWS una EC2 `t3.micro` en `us-east-1`, un presupuesto mensual de US$5 y las alarmas de caída y CPU. Los pasos de diagnóstico, rollback y operación están en [docs/operacion.md](docs/operacion.md).
+
+La ruta `/api/health` es el contrato de despliegue: debe devolver `estado`, `version`, `entorno` y `hora`. La versión debe coincidir con los siete primeros caracteres del commit que el pipeline publicó.
+
+## Evidencias de la entrega
+
+- Pull requests y checks en verde en GitHub.
+- Última ejecución exitosa de CI-CD en `main`.
+- Etiquetas de las imágenes en GHCR.
+- URL pública y respuesta de `/api/health` cuando AWS esté habilitado.
+- Alarmas CloudWatch/SNS, presupuesto y simulacro documentado.
+- Postmortem en `docs/postmortems/` y métricas DORA en `docs/metricas-dora.md`.
+
+## Métricas DORA
+
+| Semana | Despliegues | Tiempo de entrega | Tasa de fallo | Tiempo de recuperación |
+|---|---:|---|---|---|
+| 2026-10-19 | Pendiente | Pendiente | Pendiente | Pendiente |
+
+Los comandos y criterios para llenar esta tabla están en `docs/metricas-dora.md`.
