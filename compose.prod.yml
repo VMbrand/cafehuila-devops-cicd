@@ -1,0 +1,29 @@
+# Ambiente de PRODUCCIÓN (la EC2): NO construye nada, descarga las imágenes que
+# armó el pipeline en GHCR. TAG = commit desplegado; IMAGEN = ghcr.io/<usuario>/<repo>
+#   TAG=abc1234 IMAGEN=ghcr.io/usuario/cafehuila docker compose -f compose.prod.yml up -d
+services:
+  api:
+    image: ${IMAGEN:?falta IMAGEN}-api:${TAG:-latest}
+    environment:
+      APP_ENV: produccion
+    volumes:
+      - datos:/data
+    restart: unless-stopped
+    logging: &logs
+      driver: json-file
+      options:          # sin esto los logs crecen hasta llenar el disco de 8 GB
+        max-size: "10m"
+        max-file: "3"
+
+  web:
+    image: ${IMAGEN:?falta IMAGEN}-web:${TAG:-latest}
+    ports:
+      - "80:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    logging: *logs
+
+volumes:
+  datos:
