@@ -4,7 +4,7 @@
 #   prod  -> lo que se despliega: sin pruebas, usuario sin privilegios, health check
 # Ojo: `--target prod` (lo que usa compose) SE SALTA la etapa test. Por eso el pipeline
 # corre las pruebas en su propio job antes de construir la imagen.
-FROM node:22-alpine AS base
+FROM node:26-alpine AS base
 WORKDIR /app
 COPY package.json ./
 # Este proyecto no tiene dependencias npm. En uno que sí tenga: COPY package-lock.json + RUN npm ci --omit=dev
