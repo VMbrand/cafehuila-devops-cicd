@@ -1,0 +1,69 @@
+# Pipeline de INTEGRACIÓN CONTINUA de CaféHuila (Sesión 2)
+#   cualquier push o PR  -> 1 pruebas -> 2 imágenes + escaneo de seguridad (Trivy)
+#   push a main          -> además publica las imágenes en GHCR (ghcr.io/<usuario>/<repo>-api|web)
+# En la Sesión 3 se le agrega el job "desplegar".
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  packages: write        # para publicar imágenes en ghcr.io con el GITHUB_TOKEN
+
+env:
+  REGISTRO: ghcr.io
+
+jobs:
+  pruebas:
+    name: 1 · Pruebas
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Pruebas de la API
+        working-directory: api
+        run: npm test
+
+  imagenes:
+    name: 2 · Imágenes + seguridad
+    needs: pruebas
+    runs-on: ubuntu-latest
+    outputs:
+      imagen: ${{ steps.nombre.outputs.imagen }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Nombre de la imagen (GHCR exige minúsculas)
+        id: nombre
+        run: echo "imagen=${REGISTRO}/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Construir
+        run: |
+          # la etiqueta "source" vincula la imagen con este repo en GHCR (hereda sus permisos)
+          ORIGEN="org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}"
+          docker build -t ${{ steps.nombre.outputs.imagen }}-api:${{ github.sha }} --label "$ORIGEN" \
+                       --build-arg APP_VERSION=${GITHUB_SHA::7} --target prod api
+          docker build -t ${{ steps.nombre.outputs.imagen }}-web:${{ github.sha }} --label "$ORIGEN" web
+
+      - name: DevSecOps · escanear vulnerabilidades (falla si hay CRÍTICAS con arreglo)
+        run: |
+          for img in api web; do
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.57.1 \
+              image --quiet --exit-code 1 --severity CRITICAL --ignore-unfixed \
+              ${{ steps.nombre.outputs.imagen }}-$img:${{ github.sha }}
+          done
+
+      - name: Publicar en GHCR (solo main)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ${REGISTRO} -u ${{ github.actor }} --password-stdin
+          for img in api web; do
+            docker push ${{ steps.nombre.outputs.imagen }}-$img:${{ github.sha }}
+          done
+
