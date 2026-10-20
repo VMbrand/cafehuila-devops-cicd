@@ -1,0 +1,15 @@
+# Dependabot revisa cada semana si hay versiones nuevas (y parches de seguridad) y abre un PR solo.
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/api"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "docker"
+    directories: ["/api", "/web"]
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
