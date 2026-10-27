@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
-    [string]$Region = "us-east-1"
+    [string]$Region = "us-east-1",
+    [string]$Profile = "curso"
 )
 
 $ErrorActionPreference = "Stop"
@@ -16,7 +17,7 @@ if (-not (Get-Command aws -ErrorAction SilentlyContinue)) {
 }
 
 try {
-    $respuestaIdentidad = aws sts get-caller-identity --output json 2>$null
+    $respuestaIdentidad = aws sts get-caller-identity --profile $Profile --output json 2>$null
     if ($LASTEXITCODE -ne 0 -or -not $respuestaIdentidad) { throw "AWS CLI returned an invalid session" }
     $identidad = $respuestaIdentidad | ConvertFrom-Json
 } catch {
@@ -24,15 +25,16 @@ try {
 }
 
 Write-Host "Sesion AWS valida" -ForegroundColor Green
+Write-Host "Perfil: $Profile"
 Write-Host "Cuenta: $($identidad.Account)"
 Write-Host "Principal: $($identidad.Arn)"
 Write-Host "Region objetivo: $Region"
 
 try {
-    $null = aws ec2 describe-availability-zones --region $Region --all-availability-zones --output json 2>$null
+    $null = aws ec2 describe-availability-zones --profile $Profile --region $Region --all-availability-zones --output json 2>$null
     if ($LASTEXITCODE -ne 0) { throw "EC2 check failed" }
 } catch {
-    Stop-WithExplanation "La sesion existe, pero no tiene acceso de lectura a EC2 en $Region. Pide al profesor un laboratorio con EC2 habilitado."
+    Stop-WithExplanation "La sesion existe, pero EC2 no esta habilitado para esta cuenta o region. Pide al profesor activar EC2 en la cuenta academica o asignarte un laboratorio con EC2 habilitado."
 }
 
 Write-Host "EC2 accesible en $Region" -ForegroundColor Green

@@ -20,7 +20,7 @@ Fuentes oficiales: [AWS Educate](https://aws.amazon.com/education/awseducate/), 
 2. En una terminal con AWS CLI, desde la raiz del proyecto ejecuta:
 
    ```powershell
-   .\scripts\verificar-acceso-aws.ps1
+   .\scripts\verificar-acceso-aws.ps1 -Profile curso
    ```
 
    El script confirma la identidad temporal y lectura de EC2 en `us-east-1`. Si falla, copia solo el mensaje de error (sin claves) y pide al profesor que habilite EC2 o esa region.
