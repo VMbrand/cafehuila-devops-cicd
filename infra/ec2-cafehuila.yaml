@@ -1,0 +1,111 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  EC2 temporal para CafeHuila. La instancia recibe imagenes ya validadas por
+  GitHub Actions; no construye codigo en produccion.
+
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC donde se creara la instancia.
+  PublicSubnetId:
+    Type: AWS::EC2::Subnet::Id
+    Description: Subred publica con ruta a Internet Gateway.
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Key pair existente para soporte SSH de emergencia.
+  AdminCidr:
+    Type: String
+    Description: IP publica administrativa en formato x.x.x.x/32 para SSH.
+    AllowedPattern: ^(\d{1,3}\.){3}\d{1,3}/32$
+    ConstraintDescription: Debe ser una IPv4 individual, por ejemplo 203.0.113.10/32.
+  InstanceType:
+    Type: String
+    Default: t3.micro
+    AllowedValues:
+      - t3.micro
+    Description: Limite intencional de costo para la practica.
+
+Resources:
+  CafeHuilaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: HTTP publico y SSH unicamente desde AdminCidr para CafeHuila.
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+          Description: HTTP publico para la evidencia de salud.
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref AdminCidr
+          Description: SSH restringido a la IP administrativa.
+      Tags:
+        - Key: Name
+          Value: cafehuila-sg
+        - Key: Proyecto
+          Value: CafeHuila
+
+  CafeHuilaInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: '{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64}}'
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      MetadataOptions:
+        HttpEndpoint: enabled
+        HttpTokens: required
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            DeleteOnTermination: true
+            Encrypted: true
+            VolumeSize: 12
+            VolumeType: gp3
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeviceIndex: '0'
+          GroupSet:
+            - !Ref CafeHuilaSecurityGroup
+          SubnetId: !Ref PublicSubnetId
+      Tags:
+        - Key: Name
+          Value: cafehuila-produccion
+        - Key: Proyecto
+          Value: CafeHuila
+        - Key: Entorno
+          Value: produccion
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          set -euxo pipefail
+          dnf install -y docker
+          systemctl enable --now docker
+          usermod -aG docker ec2-user
+          mkdir -p /usr/local/lib/docker/cli-plugins
+          curl -fsSL https://github.com/docker/compose/releases/download/v2.29.7/docker-compose-linux-$(uname -m) -o /usr/local/lib/docker/cli-plugins/docker-compose
+          chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+          dd if=/dev/zero of=/swapfile bs=1M count=1024
+          chmod 600 /swapfile
+          mkswap /swapfile
+          swapon /swapfile
+          echo '/swapfile swap swap defaults 0 0' >> /etc/fstab
+          mkdir -p /home/ec2-user/app
+          chown ec2-user:ec2-user /home/ec2-user/app
+          echo LISTA_PARA_DESPLEGAR > /home/ec2-user/LISTA.txt
+
+Outputs:
+  InstanceId:
+    Description: Instancia que recibira el despliegue de GitHub Actions.
+    Value: !Ref CafeHuilaInstance
+  PublicIp:
+    Description: Valor para el secreto EC2_HOST de GitHub.
+    Value: !GetAtt CafeHuilaInstance.PublicIp
+  PublicDns:
+    Description: DNS publico de la instancia.
+    Value: !GetAtt CafeHuilaInstance.PublicDnsName
+  SecurityGroupId:
+    Description: Grupo de seguridad creado para la evidencia.
+    Value: !Ref CafeHuilaSecurityGroup
