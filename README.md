@@ -26,6 +26,8 @@ docker compose up --build -d --wait
 
 El despliegue a EC2 queda protegido por la variable de repositorio `DEPLOY_ENABLED`. Antes de habilitarla se debe crear la EC2 y configurar los secretos `EC2_HOST` y `EC2_SSH_KEY`; después, en **Settings → Secrets and variables → Actions → Variables**, cree `DEPLOY_ENABLED=true`.
 
+¿No tienes cuenta AWS validada por tarjeta? Sigue la [ruta de acceso institucional sin tarjeta](docs/acceso-aws-sin-tarjeta.md). Incluye el mensaje para solicitar un laboratorio AWS Educate/AWS Academy y el prechequeo `scripts/verificar-acceso-aws.ps1`.
+
 | Archivo | Propósito |
 |---|---|
 | `compose.yml` | Desarrollo: construye desde el código local |
