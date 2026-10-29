@@ -1,6 +1,9 @@
 # Front: archivos estáticos detrás de nginx. No hay nada que compilar, solo copiar.
 FROM nginx:1.31-alpine
 
+# Mantiene corregido brotli-libs antes de incorporar los archivos de la app.
+RUN apk upgrade --no-cache brotli-libs
+
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY public/ /usr/share/nginx/html/
 
