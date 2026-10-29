@@ -33,10 +33,13 @@ El despliegue a EC2 queda protegido por la variable de repositorio `DEPLOY_ENABL
 | `compose.yml` | Desarrollo: construye desde el código local |
 | `compose.prod.yml` | Producción: descarga imágenes de GHCR por commit |
 | `infra/user-data.sh` | Prepara EC2 con Docker, Compose y swap |
+| `infra/ec2-cafehuila.yaml` | Infraestructura EC2 reproducible mediante CloudFormation |
 
 ## Operación de producción
 
 Antes de habilitar el despliegue se crea en AWS una EC2 `t3.micro` en `us-east-1`, un presupuesto mensual de US$5 y las alarmas de caída y CPU. Los pasos de diagnóstico, rollback y operación están en [docs/operacion.md](docs/operacion.md).
+
+La creación de la EC2 también está declarada como código. Consulta [el procedimiento reproducible de CloudFormation](docs/despliegue-ec2-reproducible.md) para validar una cuenta AWS, crear la infraestructura y conectarla con el pipeline.
 
 La ruta `/api/health` es el contrato de despliegue: debe devolver `estado`, `version`, `entorno` y `hora`. La versión debe coincidir con los siete primeros caracteres del commit que el pipeline publicó.
 
