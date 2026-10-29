@@ -1,0 +1,95 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Presupuesto y observabilidad de la EC2 de CafeHuila.
+
+Parameters:
+  InstanceId:
+    Type: AWS::EC2::Instance::Id
+    Description: Instancia creada por la pila cafehuila-ec2.
+  AlertEmail:
+    Type: String
+    Description: Correo que confirma la suscripcion SNS y recibe alertas.
+  BudgetLimit:
+    Type: Number
+    Default: 5
+    MinValue: 1
+    Description: Tope mensual en USD para la practica.
+
+Resources:
+  AlertTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: cafehuila-alertas
+      DisplayName: CafeHuila Alertas
+
+  AlertSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol: email
+      Endpoint: !Ref AlertEmail
+      TopicArn: !Ref AlertTopic
+
+  InstanceStatusAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: cafehuila-caida
+      AlarmDescription: La EC2 fallo sus chequeos de estado durante dos periodos.
+      Namespace: AWS/EC2
+      MetricName: StatusCheckFailed
+      Dimensions:
+        - Name: InstanceId
+          Value: !Ref InstanceId
+      Statistic: Maximum
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: breaching
+      AlarmActions:
+        - !Ref AlertTopic
+
+  HighCpuAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: cafehuila-cpu-alta
+      AlarmDescription: La EC2 supera 80 por ciento de CPU durante dos periodos.
+      Namespace: AWS/EC2
+      MetricName: CPUUtilization
+      Dimensions:
+        - Name: InstanceId
+          Value: !Ref InstanceId
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 80
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlertTopic
+
+  MonthlyBudget:
+    Type: AWS::Budgets::Budget
+    Properties:
+      Budget:
+        BudgetName: cafehuila-mensual
+        BudgetLimit:
+          Amount: !Ref BudgetLimit
+          Unit: USD
+        BudgetType: COST
+        TimeUnit: MONTHLY
+      NotificationsWithSubscribers:
+        - Notification:
+            NotificationType: ACTUAL
+            ComparisonOperator: GREATER_THAN
+            Threshold: 80
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - SubscriptionType: EMAIL
+              Address: !Ref AlertEmail
+
+Outputs:
+  AlertTopicArn:
+    Description: Tema SNS que recibe las alarmas de CloudWatch.
+    Value: !Ref AlertTopic
+  BudgetName:
+    Description: Presupuesto creado para el entorno.
+    Value: !Ref MonthlyBudget
