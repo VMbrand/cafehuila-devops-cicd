@@ -22,9 +22,9 @@ docker compose up --build -d --wait
 
 ## Pipeline
 
-`.github/workflows/ci-cd.yml` ejecuta pruebas, construye API y web, escanea con Trivy y publica en GHCR al integrar un cambio en `main`.
+`.github/workflows/ci-cd.yml` ejecuta `npm test`, construye API y web, escanea con Trivy y publica en GHCR una imagen identificada por el SHA al integrar un cambio en `main`. La API de producción recibe `APP_ENV=produccion`; los valores locales viven en `.env`, que no se versiona.
 
-El despliegue a EC2 queda protegido por la variable de repositorio `DEPLOY_ENABLED`. Antes de habilitarla se debe crear la EC2 y configurar los secretos `EC2_HOST` y `EC2_SSH_KEY`; después, en **Settings → Secrets and variables → Actions → Variables**, cree `DEPLOY_ENABLED=true`.
+La cuenta AWS Project usada en esta práctica restringe SSH a la IP administrativa y bloquea OIDC. Por eso CI publica la imagen y la promoción usa el script restringido `scripts/promover-a-ec2.ps1`; la explicación completa está en [docs/despliegue-cuenta-project.md](docs/despliegue-cuenta-project.md). En una cuenta AWS tradicional con acceso seguro desde GitHub se puede activar `DEPLOY_FROM_GITHUB=true` para habilitar el job de EC2.
 
 ¿No tienes cuenta AWS validada por tarjeta? Sigue la [ruta de acceso institucional sin tarjeta](docs/acceso-aws-sin-tarjeta.md). Incluye el mensaje para solicitar un laboratorio AWS Educate/AWS Academy y el prechequeo `scripts/verificar-acceso-aws.ps1`.
 
@@ -37,7 +37,7 @@ El despliegue a EC2 queda protegido por la variable de repositorio `DEPLOY_ENABL
 
 ## Operación de producción
 
-Antes de habilitar el despliegue se crea en AWS una EC2 `t3.micro` en `us-east-1`, un presupuesto mensual de US$5 y las alarmas de caída y CPU. Los pasos de diagnóstico, rollback y operación están en [docs/operacion.md](docs/operacion.md).
+Producción usa una sola EC2 `t3.micro` en `us-east-2`, un presupuesto mensual de US$5 y alarmas de caída y CPU. Los pasos de diagnóstico, rollback y operación están en [docs/operacion.md](docs/operacion.md) y el guion de presentación en [docs/sustentacion-profesor.md](docs/sustentacion-profesor.md).
 
 La creación de la EC2 también está declarada como código. Consulta [el procedimiento reproducible de CloudFormation](docs/despliegue-ec2-reproducible.md) para validar una cuenta AWS, crear la infraestructura y conectarla con el pipeline.
 
