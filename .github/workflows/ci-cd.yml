@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - name: Pruebas de la API
@@ -63,8 +63,8 @@ jobs:
               ${{ steps.nombre.outputs.imagen }}-$img:${{ github.sha }}
           done
 
-      - name: Publicar en GHCR (solo main)
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      - name: Publicar en GHCR (main)
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ${REGISTRO} -u ${{ github.actor }} --password-stdin
           for img in api web; do
@@ -74,9 +74,9 @@ jobs:
   desplegar:
     name: 3 · Desplegar en EC2
     needs: imagenes
-    # Se activa después de crear EC2 y cargar secretos. Evita fallos falsos
-    # mientras el proyecto se prepara localmente.
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
+    # Las cuentas AWS Project no permiten OIDC y el SSH queda restringido al
+    # administrador. En esos casos se usa scripts/promover-a-ec2.ps1.
+    if: github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true' && vars.DEPLOY_FROM_GITHUB == 'true' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     environment: produccion
     concurrency: produccion          # nunca dos despliegues al tiempo
