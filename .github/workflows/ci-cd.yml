@@ -76,7 +76,7 @@ jobs:
     needs: imagenes
     # Se activa después de crear EC2 y cargar secretos. Evita fallos falsos
     # mientras el proyecto se prepara localmente.
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
+    if: github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     environment: produccion
     concurrency: produccion          # nunca dos despliegues al tiempo
