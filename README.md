@@ -24,6 +24,8 @@ docker compose up --build -d --wait
 
 `.github/workflows/ci-cd.yml` ejecuta `npm test`, construye API y web, escanea con Trivy y publica en GHCR una imagen identificada por el SHA al integrar un cambio en `main`. La API de producción recibe `APP_ENV=produccion`; los valores locales viven en `.env`, que no se versiona.
 
+Antes de construir la imagen, el job **Integración Docker** levanta API y frontend con Docker Compose, exige que ambos estén saludables y verifica `/api/health` y la respuesta HTTP. El detalle de cada puerta está en [docs/pipeline-integracion.md](docs/pipeline-integracion.md).
+
 La cuenta AWS Project usada en esta práctica restringe SSH a la IP administrativa y bloquea OIDC. Por eso CI publica la imagen y la promoción usa el script restringido `scripts/promover-a-ec2.ps1`; la explicación completa está en [docs/despliegue-cuenta-project.md](docs/despliegue-cuenta-project.md). En una cuenta AWS tradicional con acceso seguro desde GitHub se puede activar `DEPLOY_FROM_GITHUB=true` para habilitar el job de EC2.
 
 ¿No tienes cuenta AWS validada por tarjeta? Sigue la [ruta de acceso institucional sin tarjeta](docs/acceso-aws-sin-tarjeta.md). Incluye el mensaje para solicitar un laboratorio AWS Educate/AWS Academy y el prechequeo `scripts/verificar-acceso-aws.ps1`.
