@@ -1,6 +1,6 @@
 # Pipeline CI/CD de CaféHuila
-#   cualquier push o PR  -> 1 pruebas -> 2 imágenes + escaneo de seguridad
-#   push a main          -> además publica en GHCR -> 3 despliega en la EC2 -> 4 verifica
+#   cualquier push o PR  -> 1 pruebas -> 2 integración Docker -> 3 imágenes + seguridad
+#   main                 -> publica artefactos GHCR -> promoción controlada a EC2 -> health check
 #
 # Secretos (Settings → Secrets and variables → Actions):
 #   EC2_HOST     IP o DNS público de la EC2
@@ -34,9 +34,30 @@ jobs:
         working-directory: api
         run: npm test
 
-  imagenes:
-    name: 2 · Imágenes + seguridad
+  integracion:
+    name: 2 · Integración Docker
     needs: pruebas
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Levantar API y frontend como en desarrollo
+        run: docker compose up --build -d --wait
+      - name: Validar contrato de salud y respuesta web
+        run: |
+          salud=$(curl --fail --silent --show-error --retry 5 --retry-connrefused http://localhost:8080/api/health)
+          echo "$salud"
+          node -e "const s = JSON.parse(process.argv[1]); if (s.estado !== 'ok') process.exit(1)" "$salud"
+          curl --fail --silent --show-error http://localhost:8080/ > /dev/null
+      - name: Diagnóstico al fallar
+        if: failure()
+        run: docker compose logs --no-color
+      - name: Apagar entorno efímero
+        if: always()
+        run: docker compose down -v
+
+  imagenes:
+    name: 3 · Imágenes + seguridad
+    needs: integracion
     runs-on: ubuntu-latest
     outputs:
       imagen: ${{ steps.nombre.outputs.imagen }}
@@ -72,7 +93,7 @@ jobs:
           done
 
   desplegar:
-    name: 3 · Desplegar en EC2
+    name: 4 · Desplegar en EC2
     needs: imagenes
     # Las cuentas AWS Project no permiten OIDC y el SSH queda restringido al
     # administrador. En esos casos se usa scripts/promover-a-ec2.ps1.
@@ -108,7 +129,7 @@ jobs:
             docker image prune -af --filter "until=72h"
           EOF
 
-      - name: 4 · Verificar que salió la versión nueva
+      - name: 5 · Verificar que salió la versión nueva
         run: |
           esperada=${GITHUB_SHA::7}
           for i in $(seq 1 10); do
