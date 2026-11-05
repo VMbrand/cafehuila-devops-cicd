@@ -40,6 +40,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Preparar configuración no sensible para CI
+        # El .env real no se versiona. CI usa únicamente los valores públicos
+        # y reproducibles de la plantilla para levantar el entorno efímero.
+        run: cp .env.example .env
       - name: Levantar API y frontend como en desarrollo
         run: docker compose up --build -d --wait
       - name: Validar contrato de salud y respuesta web
@@ -53,7 +57,7 @@ jobs:
         run: docker compose logs --no-color
       - name: Apagar entorno efímero
         if: always()
-        run: docker compose down -v
+        run: docker compose down
 
   imagenes:
     name: 3 · Imágenes + seguridad
