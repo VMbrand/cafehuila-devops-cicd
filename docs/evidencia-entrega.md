@@ -8,7 +8,7 @@ El proyecto tiene dos niveles de evidencia que no se deben confundir:
 Para generar un reporte actual sin exponer secretos, desde la raíz del repositorio se ejecuta:
 
 ```powershell
-.\scripts\generar-evidencia-entrega.ps1 -Profile cafehuila-advanced -Region us-east-1
+.\scripts\generar-evidencia-entrega.ps1 -Profile brando -Region us-east-2
 ```
 
 El resultado se guarda en `evidencias/estado-entrega.md`. El reporte no incluye contraseñas, `SECRET_ACCESS_KEY`, contenido de archivos PEM ni una IP ficticia.

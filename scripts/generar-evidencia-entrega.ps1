@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
-    [string]$Profile = 'cafehuila-advanced',
-    [string]$Region = 'us-east-1',
+    [string]$Profile = 'brando',
+    [string]$Region = 'us-east-2',
     [string]$OutputPath = 'evidencias/estado-entrega.md'
 )
 
