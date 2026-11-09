@@ -15,6 +15,13 @@ Copy-Item .env.example .env
 docker compose up --build -d --wait
 ```
 
+Si el puerto 8080 ya está ocupado por otra aplicación local:
+
+```powershell
+$env:PUERTO_WEB='8081'
+docker compose up --build -d --wait
+```
+
 - App: http://localhost:8080
 - Salud: http://localhost:8080/api/health
 - Pruebas: `cd api; npm test`
@@ -40,6 +47,8 @@ La cuenta AWS Project usada en esta práctica restringe SSH a la IP administrati
 ## Operación de producción
 
 Producción usa una sola EC2 `t3.micro` en `us-east-2`, un presupuesto mensual de US$5 y alarmas de caída y CPU. Los pasos de diagnóstico, rollback y operación están en [docs/operacion.md](docs/operacion.md) y el guion de presentación en [docs/sustentacion-profesor.md](docs/sustentacion-profesor.md).
+
+Para una demostración ordenada, consulta el [guion final de presentación](docs/presentacion-final.md).
 
 La creación de la EC2 también está declarada como código. Consulta [el procedimiento reproducible de CloudFormation](docs/despliegue-ec2-reproducible.md) para validar una cuenta AWS, crear la infraestructura y conectarla con el pipeline.
 
